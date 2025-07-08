@@ -5,8 +5,14 @@ import { TagModule } from 'primeng/tag';
 import { ToolbarModule } from 'primeng/toolbar';
 import { ChipModule } from 'primeng/chip';
 import { RouterLink } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
 import { AsyncPipe } from '@angular/common';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
+
+import { AppState } from '../../store/app.state';
+import { JwtPayload } from '../../core/models/auth.model';
+import * as AuthActions from '../../store/auth/auth.actions';
+import { selectCurrentUser, selectIsLoggedIn, selectIsAdmin } from '../../store/auth/auth.selectors';
 
 @Component({
   selector: 'app-header',
@@ -16,17 +22,17 @@ import { AsyncPipe } from '@angular/common';
   styleUrls: ['./header.component.css']
 })
 export class HeaderComponent {
-  isLoggedIn$: typeof this.authService.isLoggedIn$;
-  isAdmin$: typeof this.authService.isAdmin$;
-  currentUser$: typeof this.authService.currentUser$;
+  isLoggedIn$: Observable<boolean>;
+  isAdmin$: Observable<boolean>;
+  currentUser$: Observable<JwtPayload | null>;
 
-  constructor(private authService: AuthService) {
-    this.isLoggedIn$ = this.authService.isLoggedIn$;
-    this.isAdmin$ = this.authService.isAdmin$;
-    this.currentUser$ = this.authService.currentUser$;
+  constructor(private store: Store<AppState>) {
+    this.isLoggedIn$ = this.store.select(selectIsLoggedIn);
+    this.isAdmin$ = this.store.select(selectIsAdmin);
+    this.currentUser$ = this.store.select(selectCurrentUser);
   }
 
   logout() {
-    this.authService.logout();
+    this.store.dispatch(AuthActions.logout());
   }
 }

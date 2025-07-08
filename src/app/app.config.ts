@@ -25,12 +25,37 @@ import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeng/themes/aura';
 import { JwtHelperService, JWT_OPTIONS } from '@auth0/angular-jwt';
 
+// NgRx imports
+import { provideStore } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import { provideStoreDevtools } from '@ngrx/store-devtools';
+import { authReducer } from './store/auth/auth.reducer';
+import { usersReducer } from './store/users/users.reducer';
+import { AuthEffects } from './store/auth/auth.effects';
+import { UsersEffects } from './store/users/users.effects';
+import { environment } from '../environments/environment';
+
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideAnimationsAsync(),
+    
+    // NgRx Store Configuration
+    provideStore({
+      auth: authReducer,
+      users: usersReducer
+    }),
+    provideEffects([AuthEffects, UsersEffects]),
+    provideStoreDevtools({
+      maxAge: 25,
+      logOnly: environment.production,
+      autoPause: true,
+      trace: false,
+      traceLimit: 75
+    }),
+    
     providePrimeNG({
       theme: {
         preset: Aura,

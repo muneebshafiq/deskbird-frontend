@@ -33,7 +33,7 @@
         </div>
 
         <p-message 
-          *ngIf="error" 
+          *ngIf="error$ | async as error" 
           severity="error" 
           [text]="error"
           class="my-2"
@@ -43,7 +43,7 @@
           <p-button 
             type="submit" 
             label="Sign In" 
-            [loading]="loading"
+            [loading]="loading$ | async"
             class="w-full"
           ></p-button>
         </div>

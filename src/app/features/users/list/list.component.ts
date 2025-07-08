@@ -1,17 +1,22 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { DialogService } from 'primeng/dynamicdialog';
-import { UsersService } from '../../../core/services/users.service';
-import { User } from '../../../core/models/user.model';
-import { AuthService } from '../../../core/services/auth.service';
-import { EditUserComponent } from '../edit/edit.component';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { TagModule } from 'primeng/tag';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { TooltipModule } from 'primeng/tooltip';
-import { Observable } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+import { User } from '../../../core/models/user.model';
+import { EditUserComponent } from '../edit/edit.component';
+import { AppState } from '../../../store/app.state';
+import * as UsersActions from '../../../store/users/users.actions';
+import { selectAllUsers, selectUsersLoading } from '../../../store/users/users.selectors';
+import { selectIsAdmin } from '../../../store/auth/auth.selectors';
 
 @Component({
   selector: 'app-users-list',
@@ -27,40 +32,34 @@ import { Observable } from 'rxjs';
   templateUrl: './list.component.html',
   styleUrls: ['./list.component.css']
 })
-export class UsersListComponent {
-  users: User[] = []; 
-  loading = true;
-  isAdmin$!: Observable<boolean>;
+export class UsersListComponent implements OnInit, OnDestroy {
+  users$: Observable<User[]>;
+  loading$: Observable<boolean>;
+  isAdmin$: Observable<boolean>;
+  private destroy$ = new Subject<void>();
 
   constructor(
-    private usersService: UsersService,
-    private authService: AuthService,
+    private store: Store<AppState>,
     private dialogService: DialogService,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
   ) {
-    this.isAdmin$ = this.authService.isAdmin$;
+    this.users$ = this.store.select(selectAllUsers);
+    this.loading$ = this.store.select(selectUsersLoading);
+    this.isAdmin$ = this.store.select(selectIsAdmin);
   }
 
   ngOnInit(): void {
     this.loadUsers();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadUsers(): void {
-    this.usersService.getUsers().subscribe({
-      next: (users) => {
-        this.users = users;
-        this.loading = false;
-      },
-      error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to load users'
-        });
-        this.loading = false;
-      }
-    });
+    this.store.dispatch(UsersActions.loadUsers());
   }
 
   editUser(user: User): void {
@@ -78,8 +77,8 @@ export class UsersListComponent {
   }
 
   addUser(): void {
-    // Double-check admin access
-    this.authService.isAdmin$.subscribe(isAdmin => {
+    // Double-check admin access using store selector
+    this.isAdmin$.pipe(takeUntil(this.destroy$)).subscribe(isAdmin => {
       if (!isAdmin) {
         this.messageService.add({
           severity: 'error',
@@ -109,23 +108,7 @@ export class UsersListComponent {
       header: 'Confirm Deletion',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        this.usersService.deleteUser(id).subscribe({
-          next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Success',
-              detail: 'User deleted successfully'
-            });
-            this.loadUsers(); // Refresh the list
-          },
-          error: () => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Failed to delete user'
-            });
-          }
-        });
+        this.store.dispatch(UsersActions.deleteUser({ id }));
       }
     });
   }

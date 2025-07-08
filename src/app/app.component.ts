@@ -1,10 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
+import { Store } from '@ngrx/store';
 import { HeaderComponent } from './layout/header/header.component';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { AuthService } from './core/services/auth.service';
+import { AppState } from './store/app.state';
+import * as AuthActions from './store/auth/auth.actions';
 
 @Component({
   selector: 'app-root',
@@ -22,10 +24,10 @@ import { AuthService } from './core/services/auth.service';
 export class AppComponent implements OnInit {
   title = 'deskbird';
 
-  constructor(private authService: AuthService) {}
+  constructor(private store: Store<AppState>) {}
 
   ngOnInit() {
-    // Ensure auth state is properly initialized
-    // The AuthService constructor already handles this, but this ensures it's initialized
+    // Initialize auth state when app starts
+    this.store.dispatch(AuthActions.initializeAuth());
   }
 }

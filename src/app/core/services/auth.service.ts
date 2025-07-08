@@ -36,6 +36,11 @@ export class AuthService {
     );
   }
 
+  // Method for NgRx effects - without automatic navigation
+  loginWithoutNavigation(credentials: LoginRequest) {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials);
+  }
+
   logout() {
     localStorage.removeItem('access_token');
     this.currentUserSubject.next(null);

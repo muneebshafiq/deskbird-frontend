@@ -65,7 +65,7 @@
     <p-button 
       type="submit" 
       label="{{ isNew ? 'Create User' : 'Update User' }}" 
-      [loading]="loading"
+      [loading]="loading$ | async"
       [disabled]="!isFormValid()"
     ></p-button>
   </div>

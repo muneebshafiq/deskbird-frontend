@@ -1,15 +1,21 @@
-import { Component, inject, Optional } from '@angular/core';
+import { Component, inject, Optional, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
 import { FormsModule } from '@angular/forms';
-import { User } from '../../../core/models/user.model';
-import { UsersService } from '../../../core/services/users.service';
-import { MessageService } from 'primeng/api';
 import { Router } from '@angular/router';
+import { Store } from '@ngrx/store';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+import { User } from '../../../core/models/user.model';
+import { MessageService } from 'primeng/api';
 import { UserRole } from '../../../core/models/auth.model';
+import { AppState } from '../../../store/app.state';
+import * as UsersActions from '../../../store/users/users.actions';
+import { selectUsersLoading } from '../../../store/users/users.selectors';
 
 interface CreateUserRequest {
   email: string;
@@ -37,12 +43,13 @@ interface UpdateUserRequest {
   templateUrl: './edit.component.html',
   styleUrls: ['./edit.component.css']
 })
-export class EditUserComponent {
-  private usersService = inject(UsersService);
+export class EditUserComponent implements OnInit, OnDestroy {
+  private store = inject(Store<AppState>);
   public dialogRef = inject(DynamicDialogRef, { optional: true }); // Made optional
   private config = inject(DynamicDialogConfig, { optional: true }); // Made optional
   private messageService = inject(MessageService);
   private router = inject(Router);
+  private destroy$ = new Subject<void>();
 
   user: User | CreateUserRequest = this.config?.data?.user || {
     email: '',
@@ -61,7 +68,16 @@ export class EditUserComponent {
     { label: 'Administrator', value: UserRole.ADMIN }
   ];
   
-  loading = false;
+  loading$: Observable<boolean> = new Observable();
+
+  ngOnInit(): void {
+    this.loading$ = this.store.select(selectUsersLoading);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   isFormValid(): boolean {
     if (this.isNew) {
@@ -89,10 +105,6 @@ export class EditUserComponent {
   }
 
   save(): void {
-    this.loading = true;
-
-    let operation;
-    
     if (this.isNew) {
       const createRequest: CreateUserRequest = {
         email: this.user.email,
@@ -100,42 +112,34 @@ export class EditUserComponent {
         password: this.password,
         role: this.user.role
       };
-      operation = this.usersService.createUser(createRequest);
+      this.store.dispatch(UsersActions.createUser({ user: createRequest }));
     } else {
       const updateRequest: UpdateUserRequest = {
         email: this.user.email,
         name: this.user.role === UserRole.ADMIN ? 'Admin' : this.user.name,
         role: this.user.role
       };
-      operation = this.usersService.updateUser((this.user as User).id, updateRequest);
+      this.store.dispatch(UsersActions.updateUser({ 
+        id: (this.user as User).id, 
+        user: updateRequest 
+      }));
     }
 
-    operation.subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: `User ${this.isNew ? 'created' : 'updated'} successfully`
-        });
-        
-        if (this.dialogRef) {
-          // Component is being used in a dialog
-          this.dialogRef.close(true);
-        } else {
-          // Component is being used as a standalone page
-          this.router.navigate(['/users']);
-        }
-      },
-      error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: `Failed to ${this.isNew ? 'create' : 'update'} user`
-        });
-        this.loading = false;
-      },
-      complete: () => {
-        this.loading = false;
+    // Listen for successful operations to close dialog
+    // Note: This is a simplified approach. In a production app, you might want
+    // to use a more sophisticated state management for dialogs
+    this.store.select(selectUsersLoading).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(loading => {
+      if (!loading) {
+        // Small delay to ensure the success notification shows before closing
+        setTimeout(() => {
+          if (this.dialogRef) {
+            this.dialogRef.close(true);
+          } else {
+            this.router.navigate(['/users']);
+          }
+        }, 500);
       }
     });
   }

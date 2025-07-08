@@ -1,12 +1,18 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../../../core/services/auth.service';
-import { LoginRequest } from '../../../core/models/auth.model';
 import { MessageModule } from 'primeng/message';
+import { Store } from '@ngrx/store';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+import { AppState } from '../../../store/app.state';
+import { LoginRequest } from '../../../core/models/auth.model';
+import * as AuthActions from '../../../store/auth/auth.actions';
+import { selectIsLoading, selectAuthError } from '../../../store/auth/auth.selectors';
 
 @Component({
   selector: 'app-login',
@@ -22,51 +28,39 @@ import { MessageModule } from 'primeng/message';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit, OnDestroy {
   credentials: LoginRequest = { email: '', password: '' };
-  loading = false;
-  error = '';
+  loading$: Observable<boolean>;
+  error$: Observable<string | null>;
+  private destroy$ = new Subject<void>();
 
-  constructor(private authService: AuthService) {}
+  constructor(private store: Store<AppState>) {
+    this.loading$ = this.store.select(selectIsLoading);
+    this.error$ = this.store.select(selectAuthError);
+  }
+
+  ngOnInit(): void {
+    // Initialize auth state on component load
+    this.store.dispatch(AuthActions.initializeAuth());
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   onInputChange() {
     // Clear error message when user starts typing
-    if (this.error) {
-      this.error = '';
-    }
+    this.store.dispatch(AuthActions.clearAuthError());
   }
 
   login() {
     if (!this.credentials.email || !this.credentials.password) {
-      this.error = 'Please enter both email and password';
+      // For validation errors, you might want to create a specific action
+      // For now, we'll let the backend handle validation
       return;
     }
 
-    this.loading = true;
-    this.error = '';
-    
-    this.authService.login(this.credentials).subscribe({
-      next: (response) => {
-        // Login successful - AuthService handles navigation
-        this.loading = false;
-        this.error = '';
-      },
-      error: (err) => {
-        console.error('Login error:', err);
-        this.loading = false;
-        
-        // Set user-friendly error message
-        if (err.status === 401 || err.status === 400) {
-          this.error = 'Invalid email or password';
-        } else if (err.status === 0) {
-          this.error = 'Unable to connect to server. Please try again.';
-        } else {
-          this.error = 'Login failed. Please try again.';
-        }
-        
-        // Ensure no invalid token is stored
-        localStorage.removeItem('access_token');
-      }
-    });
+    this.store.dispatch(AuthActions.login({ credentials: this.credentials }));
   }
 }

@@ -17,10 +17,10 @@
 
   <div class="bg-surface rounded-lg shadow-sm">
     <p-table 
-      [value]="users" 
+      [value]="(users$ | async) || []" 
       [paginator]="true" 
       [rows]="10" 
-      [loading]="loading"
+      [loading]="loading$ | async"
       responsiveLayout="scroll"
       class="w-full"
     >
