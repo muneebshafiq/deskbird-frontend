@@ -62,6 +62,7 @@
                 tooltipPosition="top"
               ></p-button>
               <p-button 
+                *ngIf="user.role !== 'admin'"
                 icon="pi pi-trash" 
                 severity="danger"
                 size="small"
