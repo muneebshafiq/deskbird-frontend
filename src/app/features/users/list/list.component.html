@@ -53,6 +53,7 @@
           <td *ngIf="isAdmin$ | async" class="p-4">
             <div class="flex justify-center gap-2">
               <p-button 
+                *ngIf="user.role !== 'admin'"
                 icon="pi pi-pencil" 
                 severity="secondary"
                 size="small"
