@@ -1,0 +1,50 @@
+<p-toolbar class="sticky top-0 z-50 border-b">
+  <ng-template pTemplate="start">
+    <a routerLink="/" class="text-green-600 hover:text-green-700 font-bold text-2xl transition-colors no-underline">
+      deskbird
+    </a>
+  </ng-template>
+
+  <ng-template pTemplate="end">
+    <div class="flex items-center gap-3">
+      <ng-container *ngIf="isLoggedIn$ | async; else notLoggedIn">
+        <div class="flex items-center gap-2" *ngIf="currentUser$ | async as user">
+          <p-chip 
+            [label]="'Welcome, ' + user.name" 
+            icon="pi pi-user"
+          ></p-chip>
+          <p-tag 
+            [value]="user.role" 
+            [severity]="user.role === 'admin' ? 'danger' : 'info'"
+          ></p-tag>
+        </div>
+        
+        <p-button 
+          routerLink="/users" 
+          label="Users" 
+          icon="pi pi-users"
+          [text]="true"
+          size="small"
+        ></p-button>
+        
+        <p-button 
+          icon="pi pi-sign-out" 
+          label="Logout" 
+          severity="danger"
+          size="small"
+          (click)="logout()"
+        ></p-button>
+      </ng-container>
+      
+      <ng-template #notLoggedIn>
+        <p-button 
+          routerLink="/login"
+          label="Login"
+          icon="pi pi-sign-in"
+          [text]="true"
+          size="small"
+        ></p-button>
+      </ng-template>
+    </div>
+  </ng-template>
+</p-toolbar>

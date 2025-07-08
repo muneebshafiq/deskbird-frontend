@@ -1,0 +1,72 @@
+<form (ngSubmit)="save()" class="flex flex-col gap-4">
+  <div class="flex flex-col gap-2">
+    <label for="email">Email</label>
+    <input 
+      id="email" 
+      type="email" 
+      pInputText 
+      [(ngModel)]="user.email" 
+      name="email" 
+      required
+      [disabled]="!isNew"
+      placeholder="Enter email address"
+    >
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <label for="name">Name</label>
+    <input 
+      id="name" 
+      type="text" 
+      pInputText 
+      [(ngModel)]="user.name" 
+      name="name" 
+      required
+      [disabled]="user.role === 'admin'"
+      [placeholder]="user.role === 'admin' ? 'Admin (auto-filled)' : 'Enter full name'"
+    >
+  </div>
+
+  <div class="flex flex-col gap-2" *ngIf="isNew">
+    <label for="password">Password</label>
+    <input 
+      id="password" 
+      type="password" 
+      pInputText 
+      [(ngModel)]="password" 
+      name="password" 
+      required
+      placeholder="Enter password"
+    >
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <label for="role">Role</label>
+    <p-dropdown 
+      id="role" 
+      [options]="roleOptions" 
+      [(ngModel)]="user.role" 
+      name="role"
+      optionLabel="label"
+      optionValue="value"
+      [style]="{ width: '100%' }"
+      placeholder="Select role"
+      (onChange)="onRoleChange()"
+    ></p-dropdown>
+  </div>
+
+  <div class="flex justify-end gap-2 mt-4">
+    <p-button 
+      type="button" 
+      label="Cancel" 
+      severity="secondary"
+      (click)="cancel()"
+    ></p-button>
+    <p-button 
+      type="submit" 
+      label="{{ isNew ? 'Create User' : 'Update User' }}" 
+      [loading]="loading"
+      [disabled]="!isFormValid()"
+    ></p-button>
+  </div>
+</form>

@@ -1,0 +1,53 @@
+<div class="min-h-[calc(100vh-80px)] flex items-center justify-center p-8 bg-gradient-to-br from-slate-50 to-slate-200">
+  <div class="w-full max-w-md">
+    <p-card header="Welcome Back" class="border-none shadow-lg rounded-xl overflow-hidden">
+      <form (ngSubmit)="login()" class="flex flex-col gap-6">
+        <div class="flex flex-col gap-2">
+          <label for="email" class="font-medium text-gray-700 text-sm">Email Address</label>
+          <input 
+            id="email" 
+            type="email" 
+            pInputText 
+            [(ngModel)]="credentials.email" 
+            name="email" 
+            required
+            placeholder="Enter your email address"
+            class="w-full"
+            (input)="onInputChange()"
+          >
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="password" class="font-medium text-gray-700 text-sm">Password</label>
+          <input 
+            id="password" 
+            type="password" 
+            pInputText 
+            [(ngModel)]="credentials.password" 
+            name="password" 
+            required
+            placeholder="Enter your password"
+            class="w-full"
+            (input)="onInputChange()"
+          >
+        </div>
+
+        <p-message 
+          *ngIf="error" 
+          severity="error" 
+          [text]="error"
+          class="my-2"
+        ></p-message>
+
+        <div class="flex flex-col gap-4 mt-2">
+          <p-button 
+            type="submit" 
+            label="Sign In" 
+            [loading]="loading"
+            class="w-full"
+          ></p-button>
+        </div>
+      </form>
+    </p-card>
+  </div>
+</div>

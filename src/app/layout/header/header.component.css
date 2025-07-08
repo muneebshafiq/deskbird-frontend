@@ -1,0 +1,35 @@
+/* Header styling with PrimeNG Toolbar */
+:host ::ng-deep .p-toolbar {
+  border: none;
+  /* border-bottom: 1px solid #e5e7eb; */
+  border-radius: 0;
+  /* background: white; */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+:host ::ng-deep .p-toolbar-group-start,
+:host ::ng-deep .p-toolbar-group-end {
+  align-items: center;
+}
+
+/* Logo styling */
+a[routerLink="/"] {
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  :host ::ng-deep .p-toolbar {
+    padding: 0.5rem 1rem;
+  }
+  
+  :host ::ng-deep .p-button-label {
+    display: none;
+  }
+  
+  :host ::ng-deep .p-chip .p-chip-text {
+    font-size: 0.875rem;
+  }
+}

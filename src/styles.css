@@ -1,0 +1,6 @@
+/* Import Tailwind CSS */
+@import "tailwindcss";
+@plugin "tailwindcss-primeui";
+
+/* Import PrimeNG CSS - v19 uses separate theme package */
+@import 'primeicons/primeicons.css';
